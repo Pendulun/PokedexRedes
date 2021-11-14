@@ -5,7 +5,8 @@
 
 #include <arpa/inet.h>
 
-#define BUFSZ 500
+#define BUFSZ 1024
+#define TAM_MAX_MSG 500
 
 void logexit(const char *msg);
 

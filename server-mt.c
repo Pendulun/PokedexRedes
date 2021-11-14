@@ -1,21 +1,15 @@
 #include "common.h"
 
-//#include <Windows.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-//#include <io.h>
 #include <unistd.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 
-//Para o socklen_t
-//#include <ws2tcpip.h>
-
-#define BUFSZ 1024
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
