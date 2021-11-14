@@ -1,4 +1,5 @@
 #include "common.h"
+#include "pokedex.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +11,8 @@
 
 #define BUFSZ 1024
 #define MAX_CONN_QUEUE 10
+#define TAM_MAX_POKEDEX 40
+
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
@@ -54,6 +57,7 @@ int main(int argc, char **argv) {
     addrtostr(addr, addrstr, BUFSZ);
     printf("bound to %s, waiting connections\n", addrstr);
 
+    struct Pokemon pokedex[TAM_MAX_POKEDEX];
     //Fica tratando eternamente os clientes
     while (1) {
         //storage do cliente
