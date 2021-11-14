@@ -17,7 +17,8 @@ void usage(int argc, char **argv) {
 	exit(EXIT_FAILURE);
 }
 
-#define BUFSZ 1024
+//Tamanho máximo por mensagem
+#define BUFSZ 500
 
 int main(int argc, char **argv) {
 	if (argc < 3) {
@@ -56,7 +57,8 @@ int main(int argc, char **argv) {
 	memset(buf, 0, BUFSZ);
 	
 	printf("> ");
-	//Lê, do teclado, uma mensagem 
+	//Lê, do teclado, uma mensagem. Já adiciona o \n no final
+	setbuf(stdin, NULL);
 	fgets(buf, BUFSZ-1, stdin);
 
 	//Envia a mensagem passando o socket "s" e retorna quantos bytes foram enviados de fato

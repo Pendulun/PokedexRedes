@@ -3,13 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
-//De acordo com
-//https://stackoverflow.com/questions/23730455/cannot-open-include-file-arpa-inet-h
-//Preciso fazer esses includes no windows:
-// #include <Winsock2.h>
-// #include <ws2def.h>
-// #include <ws2ipdef.h>
-// #include <in6addr.h>
 
 void logexit(const char *msg) {
     //Imprime a msg e adiciona o erro automaticamente na sua frente

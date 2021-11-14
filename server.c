@@ -9,7 +9,6 @@
 
 #include <sys/types.h>
 
-#define BUFSZ 1024
 #define MAX_CONN_QUEUE 10
 #define TAM_MAX_POKEDEX 40
 
@@ -82,7 +81,12 @@ int main(int argc, char **argv) {
         char buf[BUFSZ];
         memset(buf, 0, BUFSZ);
         size_t count = recv(csock, buf, BUFSZ - 1, 0);
-        printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+        
+        //CONFERIR O CONTEUDO DA MENSAGEM. DAR CLOSE SE NECESSÁRIO
+        
+        //Usar fputs ao invés do printf
+        fputs(buf, stdout);
+        //printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
         //Envia uma resposta
         sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
