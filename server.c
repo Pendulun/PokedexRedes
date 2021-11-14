@@ -9,6 +9,7 @@
 #include <sys/types.h>
 
 #define BUFSZ 1024
+#define MAX_CONN_QUEUE 10
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
@@ -38,14 +39,13 @@ int main(int argc, char **argv) {
         logexit("setsockopt");
     }
 
-    //O server não dá connect, mas sim, bind, listen e accept
     struct sockaddr *addr = (struct sockaddr *)(&storage);
     if (0 != bind(s, addr, sizeof(storage))) {
         logexit("bind");
     }
 
     //O 10 é a quantidade de conexões que podem estar pendentes para tratamento
-    if (0 != listen(s, 10)) {
+    if (0 != listen(s, MAX_CONN_QUEUE)) {
         logexit("listen");
     }
 
@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
 
         //Printa mensagem de conexão
         char caddrstr[BUFSZ];
-        addrtostr(caddr, caddrstr, BUFSZ);
-        printf("[log] connection from %s\n", caddrstr);
+        /*addrtostr(caddr, caddrstr, BUFSZ);
+        printf("[log] connection from %s\n", caddrstr);*/
 
         //Recebe uma mensagem do cliente com o recv
         //Nesse caso, estamos assumindo que o cliente não vai enviar mensagens por partes
