@@ -7,7 +7,6 @@
 #include <stdbool.h>
 
 #include <unistd.h>
-
 #include <sys/types.h>
 
 #define MAX_CONN_QUEUE 10
@@ -119,14 +118,26 @@ bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tam
     return cliente_desconectou;
 }
 
+void send_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
+    //Envia uma resposta
+    size_t bytes_recebidos_pacote;
+    bytes_recebidos_pacote = send(my_client->socket, buffer_msg, strlen(buffer_msg) + 1, 0);
+
+    //Se não enviar o número certo de dados
+    if (bytes_recebidos_pacote != strlen(buffer_msg) + 1) {
+        logexit("send");
+    }
+}
+
 bool conversa_client_server(struct Client *my_client){
     bool matar_server = false;
-    while(1){
+    bool cliente_desconectou = false;
+    while(!cliente_desconectou && !matar_server){
         
         char buffer_msg[TAM_MAX_MSG];
         memset(buffer_msg, 0, TAM_MAX_MSG);
 
-        bool cliente_desconectou = get_msg_client(my_client, buffer_msg, TAM_MAX_MSG);
+        cliente_desconectou = get_msg_client(my_client, buffer_msg, TAM_MAX_MSG);
         
         if(cliente_desconectou){
             printf("Client se desconectou repentinamente!\n");
@@ -149,16 +160,8 @@ bool conversa_client_server(struct Client *my_client){
             close(my_client->socket);
             break;
         }
-
-        //Envia uma resposta
-        //sprintf(buf, "remote endpoint: %.500s\n", caddrstr);
-        size_t bytes_recebidos_pacote;
-        bytes_recebidos_pacote = send(my_client->socket, buffer_msg, strlen(buffer_msg) + 1, 0);
-
-        //Se não enviar o número certo de dados
-        if (bytes_recebidos_pacote != strlen(buffer_msg) + 1) {
-            logexit("send");
-        }
+        
+        send_msg_client(my_client, buffer_msg, TAM_MAX_MSG);
     }
 
     return matar_server;
