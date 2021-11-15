@@ -16,6 +16,7 @@ struct Server{
     struct sockaddr *addr;
     struct sockaddr_storage storage;
     int my_socket;
+    char addrstr[BUFSZ];
 };
 
 void usage(int argc, char **argv) {
@@ -46,6 +47,11 @@ void iniciar_servidor(struct Server *my_server){
     if (0 != listen(my_server->my_socket, MAX_CONN_QUEUE)) {
         logexit("listen");
     }
+
+    //Mensagem para indicar que estamos esperando
+    addrtostr(my_server->addr, my_server->addrstr, BUFSZ);
+    printf("bound to %s, waiting connections\n", my_server->addrstr);
+
     return;
 }
 
@@ -54,20 +60,15 @@ int main(int argc, char **argv) {
     if (argc < 3) {
         usage(argc, argv);
     }
+    struct Server my_server;
 
-    struct sockaddr_storage storage;
-    if (0 != server_sockaddr_init(argv[1], argv[2], &storage)) {
+    if (0 != server_sockaddr_init(argv[1], argv[2], &(my_server.storage))) {
         usage(argc, argv);
     }
     
-    struct Server my_server;
-    my_server.storage = storage;
     iniciar_servidor(&my_server);
 
-    //Mensagem para indicar que estamos esperando
-    char addrstr[BUFSZ];
-    addrtostr(my_server.addr, addrstr, BUFSZ);
-    printf("bound to %s, waiting connections\n", addrstr);
+
 
     struct Pokedex minhaPokedex;
     bool matar_server = false;

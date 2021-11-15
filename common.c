@@ -68,7 +68,7 @@ void addrtostr(const struct sockaddr *addr, char *str, size_t strsize) {
 
         //passa da representação de rede (binário) para a textual
         if (!inet_ntop(AF_INET, &(addr4->sin_addr), addrstr,
-                       INET6_ADDRSTRLEN + 1)) {
+                       INET_ADDRSTRLEN + 1)) {
             logexit("ntop");
         }
         port = ntohs(addr4->sin_port); // network to host short
