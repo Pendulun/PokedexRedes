@@ -19,6 +19,14 @@ struct Server{
     char addrstr[BUFSZ];
 };
 
+struct Client{
+    struct sockaddr_storage cstorage;
+    struct sockaddr *caddr;
+    socklen_t caddrlen;
+    char caddrstr[BUFSZ];
+    int socket;
+};
+
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
     printf("example: %s v4 51511\n", argv[0]);
@@ -55,6 +63,22 @@ void iniciar_servidor(struct Server *my_server){
     return;
 }
 
+void iniciar_client(struct Client *my_client, struct Server *my_server){
+    my_client->caddr = (struct sockaddr *)(&(my_client->cstorage));
+    my_client->caddrlen = sizeof(my_client->cstorage);
+
+    //Retorna um novo socket
+    my_client->socket = accept(my_server->my_socket, my_client->caddr, &(my_client->caddrlen));
+
+    if (my_client->socket == -1) {
+        logexit("accept");
+    }
+
+    //Printa mensagem de conexão
+    addrtostr(my_client->caddr, my_client->caddrstr, BUFSZ);
+    printf("[log] connection from %s\n", my_client->caddrstr);
+}
+
 int main(int argc, char **argv) {
     
     if (argc < 3) {
@@ -68,8 +92,6 @@ int main(int argc, char **argv) {
     
     iniciar_servidor(&my_server);
 
-
-
     struct Pokedex minhaPokedex;
     bool matar_server = false;
     //Fica tratando eternamente os clientes
@@ -77,23 +99,9 @@ int main(int argc, char **argv) {
         if(!matar_server){
             printf("Esperando conexao\n");
             //storage do cliente
-            struct sockaddr_storage cstorage;
-            struct sockaddr *caddr = (struct sockaddr *)(&cstorage);
-            socklen_t caddrlen = sizeof(cstorage);
-
-            //Retorna um novo socket
-            int client_socket = accept(my_server.my_socket, caddr, &caddrlen);
-
-            if (client_socket == -1) {
-                logexit("accept");
-            }
-
-            //Printa mensagem de conexão
-            char caddrstr[BUFSZ];
-            addrtostr(caddr, caddrstr, BUFSZ);
-            printf("[log] connection from %s\n", caddrstr);
+            struct Client my_client;
+            iniciar_client(&my_client, &my_server);
             
-
             while(1){
                 //Recebe uma mensagem do cliente com o recv
                 char buf[TAM_MAX_MSG];
@@ -106,7 +114,7 @@ int main(int argc, char **argv) {
                 printf("[log] Esperando mensagem chegar!\n");
                 while(1){
                     printf("Esperando pacote!\n");
-                    bytes_recebidos_pacote = recv(client_socket, buf + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
+                    bytes_recebidos_pacote = recv(my_client.socket, buf + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
                     if(bytes_recebidos_pacote <= 0){
                         //printf("[log] Chegou 0 ou negativo pacotes!\n");
                         cliente_desconectou = true;
@@ -143,26 +151,26 @@ int main(int argc, char **argv) {
                     printf("Pediu para matar o servidor\n");
                     matar_server = true;
                     //Fecha conexão
-                    close(client_socket);
+                    close(my_client.socket);
                     break;
                 }
 
                 if(strcmp(buf, "logout\n")==0){
                     cliente_desconectou=true;
                     printf("Client fez logout!");
-                    close(client_socket);
+                    close(my_client.socket);
                     break;
                 }
                 
                 //Usar fputs ao invés do printf
                 printf("< ");
                 fputs(buf, stdout);
-                printf("[msg] %s, %d bytes: \'%s\'", caddrstr, (int)bytes_recebidos_pacote, buf);
+                printf("[msg] %s, %d bytes: \'%s\'", my_client.caddrstr, (int)bytes_recebidos_pacote, buf);
 
                 //Envia uma resposta
                 //sprintf(buf, "remote endpoint: %.500s\n", caddrstr);
                 //printf("Aqui 1 SV\n");
-                bytes_recebidos_pacote = send(client_socket, buf, strlen(buf) + 1, 0);
+                bytes_recebidos_pacote = send(my_client.socket, buf, strlen(buf) + 1, 0);
                 //printf("Aqui 2 SV\n");
                 //Se não enviar o número certo de dados
                 if (bytes_recebidos_pacote != strlen(buf) + 1) {
