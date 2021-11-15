@@ -33,7 +33,11 @@ void usage(int argc, char **argv) {
     exit(EXIT_FAILURE);
 }
 
-void iniciar_servidor(struct Server *my_server){
+void iniciar_servidor(struct Server *my_server, int argc, char **argv){
+    if (0 != server_sockaddr_init(argv[1], argv[2], &(my_server->storage))) {
+        usage(argc, argv);
+    }
+
     my_server->my_socket = socket(my_server->storage.ss_family, SOCK_STREAM, 0);
     if (my_server->my_socket == -1) {
         logexit("socket");
@@ -161,22 +165,16 @@ bool conversa_client_server(struct Client *my_client){
 }
 
 int main(int argc, char **argv) {
-    
     if (argc < 3) {
         usage(argc, argv);
     }
 
     struct Server my_server;
-
-    if (0 != server_sockaddr_init(argv[1], argv[2], &(my_server.storage))) {
-        usage(argc, argv);
-    }
-    
-    iniciar_servidor(&my_server);
+    iniciar_servidor(&my_server, argc, argv);
 
     struct Pokedex minhaPokedex;
-    bool matar_server = false;
 
+    bool matar_server = false;
     //Fica tratando eternamente os clientes
     while (!matar_server) {
         printf("Esperando conexao\n");
