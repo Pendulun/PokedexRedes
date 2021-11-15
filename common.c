@@ -1,8 +1,4 @@
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <arpa/inet.h>
+#include "common.h"
 
 void logexit(const char *msg) {
     //Imprime a msg e adiciona o erro automaticamente na sua frente
@@ -116,4 +112,33 @@ int server_sockaddr_init(const char *proto, const char *portstr,
     } else {
         return -1;
     }
+}
+
+bool checaJaLeuMensagem(char* buf, unsigned int total_bytes_recebido, size_t bytes_recebidos_pacote){
+	for(int i=total_bytes_recebido;i<(total_bytes_recebido+bytes_recebidos_pacote);i++){
+        char barra_n[2] = "\n";
+        if(strcmp(&buf[i],barra_n)==0){
+            return true;
+        }
+    }
+}
+
+bool le_msg_socket(int *socket, char *buffer_msg){
+    bool fim_msg_detectado = false;
+    unsigned int total_bytes_recebido = 0;
+    size_t bytes_recebidos_pacote;
+
+    while(!fim_msg_detectado){
+        printf("Esperando pacote!\n");
+        bytes_recebidos_pacote = recv(*socket, buffer_msg + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
+        if(bytes_recebidos_pacote <= 0){
+            return true;
+        }else{
+
+            fim_msg_detectado = checaJaLeuMensagem(buffer_msg, total_bytes_recebido, bytes_recebidos_pacote);
+            total_bytes_recebido += bytes_recebidos_pacote;
+        }
+    }
+
+    return false;
 }

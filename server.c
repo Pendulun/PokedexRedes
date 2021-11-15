@@ -84,44 +84,21 @@ void iniciar_client(struct Client *my_client, struct Server *my_server){
 
 bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
     printf("[log] Esperando mensagem chegar!\n");
-    //Recebe uma mensagem do cliente com o recv
-    bool fim_msg_detectado = false;
-    bool cliente_desconectou = false;
-    unsigned int total_bytes_recebido = 0;
-    size_t bytes_recebidos_pacote;
-
-    while(!fim_msg_detectado && !cliente_desconectou){
-        printf("Esperando pacote!\n");
-        bytes_recebidos_pacote = recv(my_client->socket, buffer_msg + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
-        if(bytes_recebidos_pacote <= 0){
-            cliente_desconectou = true;
-        }else{
-            for(int i=total_bytes_recebido;i<(tamanho_buffer-total_bytes_recebido);i++){
-                char barra_n[2] = "\n";
-
-                if(strcmp(&(buffer_msg[i]),barra_n)==0){
-                    fim_msg_detectado = true;
-                    break;
-                }
-            }
-            total_bytes_recebido += bytes_recebidos_pacote;
-        }
-    }
-
-    if(!cliente_desconectou){
-        //Usar fputs ao invés do printf
-        printf("< ");
-        fputs(buffer_msg, stdout);
-        printf("[msg] %s, %d bytes: \'%s\'", my_client->caddrstr, (int)bytes_recebidos_pacote, buffer_msg);
-    }
-
-    return cliente_desconectou;
+    bool deuErro = le_msg_socket(&my_client->socket, buffer_msg);
+    printf("< ");
+    fputs(buffer_msg, stdout);
+    return deuErro;
 }
 
 void send_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
     //Envia uma resposta
     size_t bytes_recebidos_pacote;
     bytes_recebidos_pacote = send(my_client->socket, buffer_msg, strlen(buffer_msg) + 1, 0);
+
+    //Se enviou um número de bytes diferente do próprio tamanho da mensagem, deu erro
+	if (bytes_recebidos_pacote != strlen(buffer_msg)+1) {
+		logexit("send");
+	}
 
     //Se não enviar o número certo de dados
     if (bytes_recebidos_pacote != strlen(buffer_msg) + 1) {
