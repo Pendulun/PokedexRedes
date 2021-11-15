@@ -83,46 +83,42 @@ void iniciar_client(struct Client *my_client, struct Server *my_server){
     printf("[log] connection from %s\n", my_client->caddrstr);
 }
 
-bool conversa_client_server(struct Client *my_client){
-    bool matar_server = false;
-    while(1){
-        //Recebe uma mensagem do cliente com o recv
-        char buf[TAM_MAX_MSG];
-        memset(buf, 0, TAM_MAX_MSG);
+bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
+    printf("[log] Esperando mensagem chegar!\n");
+    //Recebe uma mensagem do cliente com o recv
+    bool fim_msg_detectado = false;
+    bool cliente_desconectou = false;
+    unsigned int total_bytes_recebido = 0;
+    size_t bytes_recebidos_pacote;
 
-        size_t bytes_recebidos_pacote;
-        unsigned int total_bytes_recebido = 0;
-        bool cliente_desconectou = false;
-
-        printf("[log] Esperando mensagem chegar!\n");
-        while(1){
-            printf("Esperando pacote!\n");
-            bytes_recebidos_pacote = recv(my_client->socket, buf + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
-            if(bytes_recebidos_pacote <= 0){
-                //printf("[log] Chegou 0 ou negativo pacotes!\n");
-                cliente_desconectou = true;
-                break;
-            }
-            bool fim_msg_detectado = false;
-            for(int i=total_bytes_recebido;i<(TAM_MAX_MSG-total_bytes_recebido);i++){
-                //printf("Testando no Server %d\n",i);
+    while(!fim_msg_detectado && !cliente_desconectou){
+        printf("Esperando pacote!\n");
+        bytes_recebidos_pacote = recv(my_client->socket, buffer_msg + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
+        if(bytes_recebidos_pacote <= 0){
+            cliente_desconectou = true;
+        }else{
+            for(int i=total_bytes_recebido;i<(tamanho_buffer-total_bytes_recebido);i++){
                 char barra_n[2] = "\n";
-                char fim_string[2] = "\0";
-                /*if(strcmp(&buf[i],fim_string)==0){
-                    printf("Possui \\0 em %d\n",i);
-                }*/
-                if(strcmp(&buf[i],barra_n)==0){
+
+                if(strcmp(&(buffer_msg[i]),barra_n)==0){
                     fim_msg_detectado = true;
-                    //printf("Possui \\n em %d\n",i);
                     break;
                 }
             }
             total_bytes_recebido += bytes_recebidos_pacote;
-            if(fim_msg_detectado){
-                break;
-            }
         }
+    }
+}
 
+bool conversa_client_server(struct Client *my_client){
+    bool matar_server = false;
+    while(1){
+        
+        char buffer_msg[TAM_MAX_MSG];
+        memset(buffer_msg, 0, TAM_MAX_MSG);
+
+        bool cliente_desconectou = get_msg_client(my_client, buffer_msg, TAM_MAX_MSG);
+        
         if(cliente_desconectou){
             printf("Client se desconectou repentinamente!\n");
             //close(csock);
@@ -130,7 +126,7 @@ bool conversa_client_server(struct Client *my_client){
         }
                 
         //CONFERIR O CONTEUDO DA MENSAGEM. DAR CLOSE SE NECESSÁRIO
-        if(strcmp(buf,"kill\n")==0){
+        if(strcmp(buffer_msg,"kill\n")==0){
             printf("Pediu para matar o servidor\n");
             matar_server = true;
             //Fecha conexão
@@ -138,7 +134,7 @@ bool conversa_client_server(struct Client *my_client){
             break;
         }
 
-        if(strcmp(buf, "logout\n")==0){
+        if(strcmp(buffer_msg, "logout\n")==0){
             cliente_desconectou=true;
             printf("Client fez logout!");
             close(my_client->socket);
@@ -147,16 +143,17 @@ bool conversa_client_server(struct Client *my_client){
                 
         //Usar fputs ao invés do printf
         printf("< ");
-        fputs(buf, stdout);
-        printf("[msg] %s, %d bytes: \'%s\'", my_client->caddrstr, (int)bytes_recebidos_pacote, buf);
+        fputs(buffer_msg, stdout);
+        size_t bytes_recebidos_pacote;
+        printf("[msg] %s, %d bytes: \'%s\'", my_client->caddrstr, (int)bytes_recebidos_pacote, buffer_msg);
 
         //Envia uma resposta
         //sprintf(buf, "remote endpoint: %.500s\n", caddrstr);
-
-        bytes_recebidos_pacote = send(my_client->socket, buf, strlen(buf) + 1, 0);
+ 
+        bytes_recebidos_pacote = send(my_client->socket, buffer_msg, strlen(buffer_msg) + 1, 0);
 
         //Se não enviar o número certo de dados
-        if (bytes_recebidos_pacote != strlen(buf) + 1) {
+        if (bytes_recebidos_pacote != strlen(buffer_msg) + 1) {
             logexit("send");
         }
     }
@@ -175,12 +172,12 @@ int main(int argc, char **argv) {
     struct Pokedex minhaPokedex;
 
     bool matar_server = false;
-    //Fica tratando eternamente os clientes
     while (!matar_server) {
         printf("Esperando conexao\n");
-        //storage do cliente
+
         struct Client my_client;
         iniciar_client(&my_client, &my_server);
+
         matar_server = conversa_client_server(&my_client);
     }
     exit(EXIT_SUCCESS);
