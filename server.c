@@ -83,7 +83,6 @@ void iniciar_client(struct Client *my_client, struct Server *my_server){
 }
 
 bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
-    printf("[log] Esperando mensagem chegar!\n");
     bool deuErro = le_msg_socket(&my_client->socket, buffer_msg);
     printf("< ");
     fputs(buffer_msg, stdout);

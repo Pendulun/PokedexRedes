@@ -58,11 +58,9 @@ void captura_mensagem_teclado(char* buf, unsigned int tamanho_buffer){
 	//Lê, do teclado, uma mensagem. Já adiciona o \n no final
 	setbuf(stdin, NULL);
 	fgets(buf, tamanho_buffer-1, stdin);
-	printf("Tamanho mensagem: %d\n",strlen(buf));
 }
 
 void envia_mensagem_server(struct Client* cliente, char* buf, unsigned int tamanho_buffer){
-	//Envia a mensagem passando o socket e retorna quantos bytes foram enviados de fato
 	size_t bytes_recebidos_pacote = send(cliente->socket, buf, strlen(buf)+1, 0);
 
 	//Se enviou um número de bytes diferente do próprio tamanho da mensagem, deu erro
@@ -72,31 +70,25 @@ void envia_mensagem_server(struct Client* cliente, char* buf, unsigned int taman
 }
 
 bool recebe_mensagem_servidor(char* buf, unsigned int tamanho_buffer, struct Client* cliente){
-	//Parte de recebimento de mensagem
 	memset(buf, 0, tamanho_buffer);
-	unsigned int total_bytes_recebido = 0;
-	bool jaLeuTudo = false;
-	size_t bytes_recebidos_pacote;
 
 	bool deuErro = le_msg_socket(&cliente->socket, buf);
+	
 	printf("< ");
 	fputs(buf,stdout);
+	
 	return deuErro;
 }
 
 bool conversa_com_servidor(char* buf, unsigned int tamanho_buffer, struct Client* cliente){
-
 	bool terminouConexao = false;
-	//Zera o buf
 	memset(buf, 0, tamanho_buffer);
-		
+	
 	captura_mensagem_teclado(buf, tamanho_buffer);
 
 	envia_mensagem_server(cliente, buf, tamanho_buffer);
-
-	terminouConexao = recebe_mensagem_servidor(buf, tamanho_buffer, cliente);
-
-	return terminouConexao;
+	
+	return recebe_mensagem_servidor(buf, tamanho_buffer, cliente);;
 }
 
 int main(int argc, char **argv) {
@@ -111,57 +103,7 @@ int main(int argc, char **argv) {
 	char buf[TAM_MAX_MSG];
 	bool terminouConexao=false;
 	while(!terminouConexao){
-
 		terminouConexao = conversa_com_servidor(buf, TAM_MAX_MSG, &cliente);
-		/*
-		//Zera o buf
-		memset(buf, 0, TAM_MAX_MSG);
-		
-		printf("> ");
-		//Lê, do teclado, uma mensagem. Já adiciona o \n no final
-		setbuf(stdin, NULL);
-		fgets(buf, TAM_MAX_MSG-1, stdin);
-		printf("Tamanho mensagem: %d\n",strlen(buf));
-
-		//Envia a mensagem passando o socket "s" e retorna quantos bytes foram enviados de fato
-		size_t bytes_recebidos_pacote = send(cliente.socket, buf, strlen(buf)+1, 0);
-		//Se enviou um número de bytes diferente do próprio tamanho da mensagem, deu erro
-		if (bytes_recebidos_pacote != strlen(buf)+1) {
-			logexit("send");
-		}
-
-		//Parte de recebimento de mensagem
-		memset(buf, 0, TAM_MAX_MSG);
-		unsigned total_bytes_recebido = 0;
-
-		while(1) {
-			printf("Esperando resposta\n");
-			//O recv pode enviar a mesma mensagem em partes
-			//Dessa forma, temos que ficar recebendo até que ele envie 0 bytes
-			bytes_recebidos_pacote = recv(cliente.socket, buf + total_bytes_recebido, TAM_MAX_MSG - total_bytes_recebido, 0);
-			short int jaLeu = 0;
-            for(int i=total_bytes_recebido;i<(total_bytes_recebido+bytes_recebidos_pacote);i++){
-                char barra_n[2] = "\n";
-                if(strcmp(&buf[i],barra_n)==0){
-                    jaLeu = 1;
-                   	//printf("Possui \\n em %d\n",i);
-                    break;
-                }
-            }
-			if (bytes_recebidos_pacote == 0) {
-				// Connection terminated.
-				terminouConexao=true;
-				break;
-			}
-			
-			total_bytes_recebido += bytes_recebidos_pacote;
-			if(jaLeu==1){
-				break;
-			}
-		}
-
-		printf("received %u bytes\n", total_bytes_recebido);
-		puts(buf);*/
 	}
 	
 	close(cliente.socket);
