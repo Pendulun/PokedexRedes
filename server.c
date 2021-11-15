@@ -108,6 +108,15 @@ bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tam
             total_bytes_recebido += bytes_recebidos_pacote;
         }
     }
+
+    if(!cliente_desconectou){
+        //Usar fputs ao invés do printf
+        printf("< ");
+        fputs(buffer_msg, stdout);
+        printf("[msg] %s, %d bytes: \'%s\'", my_client->caddrstr, (int)bytes_recebidos_pacote, buffer_msg);
+    }
+
+    return cliente_desconectou;
 }
 
 bool conversa_client_server(struct Client *my_client){
@@ -140,16 +149,10 @@ bool conversa_client_server(struct Client *my_client){
             close(my_client->socket);
             break;
         }
-                
-        //Usar fputs ao invés do printf
-        printf("< ");
-        fputs(buffer_msg, stdout);
-        size_t bytes_recebidos_pacote;
-        printf("[msg] %s, %d bytes: \'%s\'", my_client->caddrstr, (int)bytes_recebidos_pacote, buffer_msg);
 
         //Envia uma resposta
         //sprintf(buf, "remote endpoint: %.500s\n", caddrstr);
- 
+        size_t bytes_recebidos_pacote;
         bytes_recebidos_pacote = send(my_client->socket, buffer_msg, strlen(buffer_msg) + 1, 0);
 
         //Se não enviar o número certo de dados
