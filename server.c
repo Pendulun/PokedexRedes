@@ -172,6 +172,8 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         }
     }else if(operacao == REMOVE){
         char *dado = strtok(NULL, delimiter);
+
+        printf("Nome pokemon a remover %s\n", dado);
         resultAcao = removerPokemon(minhaPokedex, dado);
 
         if(resultAcao == OK){
@@ -238,6 +240,7 @@ bool conversa_client_server(struct Client *my_client, struct Pokedex* minhaPoked
                     break;
                 }else{
                     realizarOpPokedex(operacao, minhaPokedex, msgParaCliente); 
+                    printf("Tamanho pokedex: %d\n", minhaPokedex->quantidadePokemons);
                     break;              
                 }
 
@@ -263,7 +266,11 @@ int main(int argc, char **argv) {
     struct Server my_server;
     iniciar_servidor(&my_server, argc, argv);
 
-    struct Pokedex minhaPokedex;
+    struct Pokedex* minhaPokedex = malloc(sizeof(struct Pokedex));
+    minhaPokedex->head = NULL;
+    minhaPokedex->tail = NULL;
+    minhaPokedex->maxPokemons = TAM_MAX_POKEDEX;
+    minhaPokedex->quantidadePokemons = 0;
 
     bool matar_server = false;
     while (!matar_server) {
@@ -272,7 +279,8 @@ int main(int argc, char **argv) {
         struct Client my_client;
         iniciar_client(&my_client, &my_server);
 
-        matar_server = conversa_client_server(&my_client, &minhaPokedex);
+        matar_server = conversa_client_server(&my_client, minhaPokedex);
     }
+    limparPokedex(minhaPokedex);
     exit(EXIT_SUCCESS);
 }
