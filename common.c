@@ -40,11 +40,11 @@ int addrparse(const char *addrstr, const char *portstr,
     //tenta converter o endereço para ipv6
     struct in6_addr inaddr6; // 128-bit IPv6 address
     if (inet_pton(AF_INET6, addrstr, &inaddr6)) {
-        struct sockaddr_in *addr6 = (struct sockaddr_in *)storage;
-        addr6->sin_family = AF_INET6;
-        addr6->sin_port = port;
-        // addr6->sin6_addr = inaddr6
-        memcpy(&(addr6->sin_addr), &inaddr6, sizeof(inaddr6));
+        struct sockaddr_in6 *addr6 = (struct sockaddr_in *)storage;
+        addr6->sin6_family = AF_INET6;
+        addr6->sin6_port = port;
+        //addr6->sin6_addr = inaddr6;
+        memcpy(&(addr6->sin6_addr), &inaddr6, sizeof(inaddr6));
         return 0;
     }
 
@@ -130,7 +130,6 @@ bool le_msg_socket(int *socket, char *buffer_msg){
     size_t bytes_recebidos_pacote;
 
     while(!fim_msg_detectado){
-        printf("Esperando pacote!\n");
         bytes_recebidos_pacote = recv(*socket, buffer_msg + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
         if(bytes_recebidos_pacote <= 0){
             return true;
@@ -139,6 +138,5 @@ bool le_msg_socket(int *socket, char *buffer_msg){
             total_bytes_recebido += bytes_recebidos_pacote;
         }
     }
-    printf("Retornando false\n");
     return false;
 }

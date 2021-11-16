@@ -89,7 +89,6 @@ bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tam
     //printf(deuErro);
     printf("< ");
     fputs(buffer_msg, stdout);
-    printf("Alo\n");
     return deuErro;
 }
 
@@ -111,24 +110,43 @@ void send_msg_client(struct Client *my_client, char* buffer_msg, unsigned int ta
 
 enum ops_server_enum getOpMensagem(char* buf_msg){
     if(strcmp(buf_msg,"kill\0")==0){
-        printf("PEDIU PARA MATAR\n");
         return DIE;
     }else if(strcmp(buf_msg,"add\0")==0){
-        printf("PEDIU PARA ADD\n");
         return ADD;
     }else if(strcmp(buf_msg,"remove\0")==0){
-        printf("PEDIU PARA REMOVE\n");
         return REMOVE;
     }else if(strcmp(buf_msg,"list\0")==0){
-        printf("PEDIU PARA LISTAR\n");
         return LIST;
     }else if(strcmp(buf_msg,"exchange\0")==0){
-        printf("PEDIU PARA EXCHANGE\n");
         return EXCHANGE;
     }else{
-        printf("COMANDO DESCONHECIDO!\n");
         return DISCONNECT_CLIENT;
     }
+}
+
+void addMensagemAdded(char* msgParaCliente, char *dado){
+    strcat(msgParaCliente, dado);
+    strcat(msgParaCliente, " added");
+}
+
+void addMensagemAlreadyExists(char* msgParaCliente, char *dado){
+    strcat(msgParaCliente, dado);
+    strcat(msgParaCliente, " already exists");
+}
+
+void addMensagemRemoved(char* msgParaCliente, char *dado){
+    strcat(msgParaCliente, dado);
+    strcat(msgParaCliente, " removed");
+}
+
+void addMensagemDoesntExists(char* msgParaCliente, char *dado){
+    strcat(msgParaCliente, dado);
+    strcat(msgParaCliente, " does not exist");
+}
+
+void addMensagemExchanged(char* msgParaCliente, char *dado){
+    strcat(msgParaCliente, dado);
+    strcat(msgParaCliente, " exchanged");
 }
 
 void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPokedex, char* msgParaCliente){
@@ -144,11 +162,9 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         enum ops_pokedex_enum result = adicionarPokemon(minhaPokedex, dado);
 
         if(result == OK){
-            strcat(msgParaCliente, dado);
-            strcat(msgParaCliente, " added");
+            addMensagemAdded(msgParaCliente, dado);
         }else if(result == ALREADY_EXISTS){
-            strcat(msgParaCliente, dado);
-            strcat(msgParaCliente, " already exists");
+            addMensagemAlreadyExists(msgParaCliente, dado);
         }else if(result == MAX_LIMIT){
             strcat(msgParaCliente, "limit exceeded");
         }else if(result == INVALID){
@@ -159,25 +175,18 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         resultAcao = removerPokemon(minhaPokedex, dado);
 
         if(resultAcao == OK){
-            strcat(msgParaCliente, dado);
-            strcat(msgParaCliente, " removed");
+            addMensagemRemoved(msgParaCliente, dado);
         }else if(resultAcao == DOESNT_EXISTS){
-             strcat(msgParaCliente, dado);
-             strcat(msgParaCliente, " does not exist");
+            addMensagemDoesntExists(msgParaCliente, dado);
         }else if(resultAcao == INVALID){
             strcat(msgParaCliente,"invalid message");
         }
-
 
     }else if(operacao == LIST){
         char* nomesPokemons;
         nomesPokemons = listarPokemons(minhaPokedex);
         if(strlen(nomesPokemons)==0){
             nomesPokemons = "none";
-        }
-
-        if(strlen(msgParaCliente) > 0){
-                strcat(msgParaCliente," ");
         }
 
         strcat(msgParaCliente,nomesPokemons);
@@ -188,14 +197,11 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         resultAcao = trocarPokemon(minhaPokedex, dado1, dado2);
 
         if(resultAcao == OK){
-            strcat(msgParaCliente, dado1);
-            strcat(msgParaCliente, " exchanged");
+            addMensagemExchanged(msgParaCliente, dado1);
         }else if(resultAcao == DOESNT_EXISTS){
-             strcat(msgParaCliente, dado1);
-             strcat(msgParaCliente, " does not exist");
+             addMensagemDoesntExists(msgParaCliente, dado1);
         }else if(resultAcao == ALREADY_EXISTS){
-            strcat(msgParaCliente, dado2);
-            strcat(msgParaCliente, " already exists");
+            addMensagemAlreadyExists(msgParaCliente, dado2);
         }else if(resultAcao == INVALID){
             strcat(msgParaCliente,"invalid message");
         }
@@ -213,29 +219,20 @@ bool conversa_client_server(struct Client *my_client, struct Pokedex* minhaPoked
         if(cliente_desconectou){
             printf("Client se desconectou repentinamente!\n");
         }else{
-            size_t tamMsg = strlen(buffer_msg);
-            char* msgRecebida[tamMsg];
-            memset(msgRecebida, 0, tamMsg);
-            strncpy(msgRecebida, buffer_msg, tamMsg);
-            printf("%s\n",msgRecebida);
-            
             const char delimiter[] = " \t\r\n\v\f";
-            char *token;
-            token = strtok(msgRecebida, delimiter);
+            char *token = strtok(buffer_msg, delimiter);
+
             char* msgParaCliente[TAM_MAX_MSG];
             memset(msgParaCliente, 0, TAM_MAX_MSG);
 
             while (token != NULL){
-                printf("token: %s\n",token);
                 enum ops_server_enum operacao = getOpMensagem(token);
 
                 if(operacao == DISCONNECT_CLIENT){
                     cliente_desconectou=true;
-                    printf("Client fez logout!");
                     close(my_client->socket);
                     break;
                 }else if(operacao == DIE){
-                    printf("Pediu para matar o servidor\n");
                     matar_server = true;
                     close(my_client->socket);
                     break;
@@ -247,7 +244,6 @@ bool conversa_client_server(struct Client *my_client, struct Pokedex* minhaPoked
                 token = strtok(NULL, delimiter);
             }
             strcat(msgParaCliente,"\n");
-            printf("Mensagem para cliente:\n %s\n",msgParaCliente);
 
             if(!matar_server && !cliente_desconectou){
                 //Enviar mensagem de acordo com a resposta da operação pokedex

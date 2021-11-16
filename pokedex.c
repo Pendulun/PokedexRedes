@@ -13,5 +13,5 @@ enum ops_pokedex_enum trocarPokemon(struct Pokedex *pokedex, const char *nome1, 
 }
 
 char* listarPokemons(struct Pokedex *pokedex){
-    return;
+    return "";
 }
