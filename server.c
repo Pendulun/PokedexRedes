@@ -26,6 +26,8 @@ struct Client{
     int socket;
 };
 
+enum ops_server_enum{DISCONNECT_CLIENT, DIE, ADD, REMOVE, LIST, EXCHANGE};
+
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
     printf("example: %s v4 51511\n", argv[0]);
@@ -84,8 +86,10 @@ void iniciar_client(struct Client *my_client, struct Server *my_server){
 
 bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
     bool deuErro = le_msg_socket(&my_client->socket, buffer_msg);
+    //printf(deuErro);
     printf("< ");
     fputs(buffer_msg, stdout);
+    printf("Alo\n");
     return deuErro;
 }
 
@@ -105,39 +109,151 @@ void send_msg_client(struct Client *my_client, char* buffer_msg, unsigned int ta
     }
 }
 
-bool conversa_client_server(struct Client *my_client){
+enum ops_server_enum getOpMensagem(char* buf_msg){
+    if(strcmp(buf_msg,"kill\0")==0){
+        printf("PEDIU PARA MATAR\n");
+        return DIE;
+    }else if(strcmp(buf_msg,"add\0")==0){
+        printf("PEDIU PARA ADD\n");
+        return ADD;
+    }else if(strcmp(buf_msg,"remove\0")==0){
+        printf("PEDIU PARA REMOVE\n");
+        return REMOVE;
+    }else if(strcmp(buf_msg,"list\0")==0){
+        printf("PEDIU PARA LISTAR\n");
+        return LIST;
+    }else if(strcmp(buf_msg,"exchange\0")==0){
+        printf("PEDIU PARA EXCHANGE\n");
+        return EXCHANGE;
+    }else{
+        printf("COMANDO DESCONHECIDO!\n");
+        return DISCONNECT_CLIENT;
+    }
+}
+
+void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPokedex, char* msgParaCliente){
+    enum ops_pokedex_enum resultAcao;
+    const char delimiter[]  = " \t\r\n\v\f";
+
+    if(strlen(msgParaCliente) > 0){
+                strcat(msgParaCliente," ");
+    }
+
+    if(operacao == ADD){
+        char *dado = strtok(NULL, delimiter);
+        enum ops_pokedex_enum result = adicionarPokemon(minhaPokedex, dado);
+
+        if(result == OK){
+            strcat(msgParaCliente, dado);
+            strcat(msgParaCliente, " added");
+        }else if(result == ALREADY_EXISTS){
+            strcat(msgParaCliente, dado);
+            strcat(msgParaCliente, " already exists");
+        }else if(result == MAX_LIMIT){
+            strcat(msgParaCliente, "limit exceeded");
+        }else if(result == INVALID){
+            strcat(msgParaCliente,"invalid message");
+        }
+    }else if(operacao == REMOVE){
+        char *dado = strtok(NULL, delimiter);
+        resultAcao = removerPokemon(minhaPokedex, dado);
+
+        if(resultAcao == OK){
+            strcat(msgParaCliente, dado);
+            strcat(msgParaCliente, " removed");
+        }else if(resultAcao == DOESNT_EXISTS){
+             strcat(msgParaCliente, dado);
+             strcat(msgParaCliente, " does not exist");
+        }else if(resultAcao == INVALID){
+            strcat(msgParaCliente,"invalid message");
+        }
+
+
+    }else if(operacao == LIST){
+        char* nomesPokemons;
+        nomesPokemons = listarPokemons(minhaPokedex);
+        if(strlen(nomesPokemons)==0){
+            nomesPokemons = "none";
+        }
+
+        if(strlen(msgParaCliente) > 0){
+                strcat(msgParaCliente," ");
+        }
+
+        strcat(msgParaCliente,nomesPokemons);
+        resultAcao = OK;
+    }else if(operacao == EXCHANGE){
+        char *dado1 = strtok(NULL, delimiter);
+        char *dado2 = strtok(NULL, delimiter);
+        resultAcao = trocarPokemon(minhaPokedex, dado1, dado2);
+
+        if(resultAcao == OK){
+            strcat(msgParaCliente, dado1);
+            strcat(msgParaCliente, " exchanged");
+        }else if(resultAcao == DOESNT_EXISTS){
+             strcat(msgParaCliente, dado1);
+             strcat(msgParaCliente, " does not exist");
+        }else if(resultAcao == ALREADY_EXISTS){
+            strcat(msgParaCliente, dado2);
+            strcat(msgParaCliente, " already exists");
+        }else if(resultAcao == INVALID){
+            strcat(msgParaCliente,"invalid message");
+        }
+    }
+}
+
+bool conversa_client_server(struct Client *my_client, struct Pokedex* minhaPokedex){
     bool matar_server = false;
     bool cliente_desconectou = false;
+    char buffer_msg[TAM_MAX_MSG];
     while(!cliente_desconectou && !matar_server){
-        
-        char buffer_msg[TAM_MAX_MSG];
         memset(buffer_msg, 0, TAM_MAX_MSG);
-
         cliente_desconectou = get_msg_client(my_client, buffer_msg, TAM_MAX_MSG);
-        
+
         if(cliente_desconectou){
             printf("Client se desconectou repentinamente!\n");
-            //close(csock);
-            break;
-        }
-                
-        //CONFERIR O CONTEUDO DA MENSAGEM. DAR CLOSE SE NECESSÁRIO
-        if(strcmp(buffer_msg,"kill\n")==0){
-            printf("Pediu para matar o servidor\n");
-            matar_server = true;
-            //Fecha conexão
-            close(my_client->socket);
-            break;
-        }
+        }else{
+            size_t tamMsg = strlen(buffer_msg);
+            char* msgRecebida[tamMsg];
+            memset(msgRecebida, 0, tamMsg);
+            strncpy(msgRecebida, buffer_msg, tamMsg);
+            printf("%s\n",msgRecebida);
+            
+            const char delimiter[] = " \t\r\n\v\f";
+            char *token;
+            token = strtok(msgRecebida, delimiter);
+            char* msgParaCliente[TAM_MAX_MSG];
+            memset(msgParaCliente, 0, TAM_MAX_MSG);
 
-        if(strcmp(buffer_msg, "logout\n")==0){
-            cliente_desconectou=true;
-            printf("Client fez logout!");
-            close(my_client->socket);
-            break;
+            while (token != NULL){
+                printf("token: %s\n",token);
+                enum ops_server_enum operacao = getOpMensagem(token);
+
+                if(operacao == DISCONNECT_CLIENT){
+                    cliente_desconectou=true;
+                    printf("Client fez logout!");
+                    close(my_client->socket);
+                    break;
+                }else if(operacao == DIE){
+                    printf("Pediu para matar o servidor\n");
+                    matar_server = true;
+                    close(my_client->socket);
+                    break;
+                }else{
+                    realizarOpPokedex(operacao, minhaPokedex, msgParaCliente); 
+                    break;              
+                }
+
+                token = strtok(NULL, delimiter);
+            }
+            strcat(msgParaCliente,"\n");
+            printf("Mensagem para cliente:\n %s\n",msgParaCliente);
+
+            if(!matar_server && !cliente_desconectou){
+                //Enviar mensagem de acordo com a resposta da operação pokedex
+                send_msg_client(my_client, msgParaCliente, strlen(msgParaCliente));
+            }
         }
-        
-        send_msg_client(my_client, buffer_msg, TAM_MAX_MSG);
     }
 
     return matar_server;
@@ -160,7 +276,7 @@ int main(int argc, char **argv) {
         struct Client my_client;
         iniciar_client(&my_client, &my_server);
 
-        matar_server = conversa_client_server(&my_client);
+        matar_server = conversa_client_server(&my_client, &minhaPokedex);
     }
     exit(EXIT_SUCCESS);
 }

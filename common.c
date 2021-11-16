@@ -121,6 +121,7 @@ bool checaJaLeuMensagem(char* buf, unsigned int total_bytes_recebido, size_t byt
             return true;
         }
     }
+    return false;
 }
 
 bool le_msg_socket(int *socket, char *buffer_msg){
@@ -134,11 +135,10 @@ bool le_msg_socket(int *socket, char *buffer_msg){
         if(bytes_recebidos_pacote <= 0){
             return true;
         }else{
-
             fim_msg_detectado = checaJaLeuMensagem(buffer_msg, total_bytes_recebido, bytes_recebidos_pacote);
             total_bytes_recebido += bytes_recebidos_pacote;
         }
     }
-
+    printf("Retornando false\n");
     return false;
 }

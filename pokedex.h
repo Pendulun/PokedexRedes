@@ -8,12 +8,22 @@ struct Pokemon{
     char nome[TAM_MAX_NOME_POKEMON+1];
 };
 
-struct Pokedex{
-    struct Pokemon pokemons[TAM_MAX_POKEDEX];
+struct Node{
+    struct Pokemon pokemon;
+    struct Node* prox;
 };
 
-enum operacoes_enum {ADD, REMOVE, LIST, UPDATE};
+struct Pokedex{
+    unsigned int quantidadePokemons;
+    unsigned int maxPokemons;
+    struct Node* head;
+};
 
-short int addPokemon(const struct Pokemon pokemon);
+enum ops_pokedex_enum{OK, MAX_LIMIT, ALREADY_EXISTS, DOESNT_EXISTS, INVALID};
+
+enum ops_pokedex_enum adicionarPokemon(struct Pokedex *pokedex, const char *nome);
+enum ops_pokedex_enum removerPokemon(struct Pokedex *pokedex, const char *nome);
+enum ops_pokedex_enum trocarPokemon(struct Pokedex *pokedex, const char *nome1, const char *nome2);
+char* listarPokemons(struct Pokedex *pokedex);
 
 #endif //Pokedex
