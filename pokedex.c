@@ -28,7 +28,6 @@ void adicionarPokemons(struct Pokedex *pokedex, const char* nomes[], const unsig
             //Se já não existe na pokedex
             if(searchInPokedex(pokedex, nomes[idxPokemonAdd])==NULL){
                 //Se o nome passa do limite
-                printf("Nome do pokemon a ser add: %s\n", nomes[idxPokemonAdd]);
                 if(strlen(nomes[idxPokemonAdd])>TAM_MAX_NOME_POKEMON){
                     results[idxPokemonAdd] = INVALID;
                 }else{

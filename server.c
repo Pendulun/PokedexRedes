@@ -138,7 +138,6 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
     const char delimiter[]  = " \t\r\n\v\f";
 
     if(strlen(msgParaCliente) > 0){
-        printf("Mensagem não estava vazia. Add espaço 1 !\n");
         strcat(msgParaCliente," ");
     }
 
@@ -148,11 +147,7 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         //Assumindo que sempre terá pelo menos um pokemon a ser add e que só existe uma operação a ser realizada por vez
         char* token = strtok(NULL, delimiter);
         while (token != NULL){
-            printf("Proximo token: %s\n", token);
-            printf("NumPokemonsAdded: %u\n", numPokemonsAdded);
-            printf("Entrou While\n");
             if(numPokemonsAdded == NUM_MAX_POKEMON_ADDED){
-                printf("Leu muitos pokemons!\n");
                 //Ignora outros pokemons passados além do NUM_MAX_POKEMON_ADDED
                 break;
             }else{    
@@ -162,35 +157,22 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
                 numPokemonsAdded++;
             }
         }
-
-
-        for(unsigned int idx=0; idx< numPokemonsAdded; idx++){
-            printf("Pokemons passados: %s'\n", dados[idx]);
-        }
         
         enum ops_pokedex_enum results[numPokemonsAdded];
         adicionarPokemons(minhaPokedex, dados, numPokemonsAdded, results);
 
         for(unsigned int idxResult = 0; idxResult<numPokemonsAdded; idxResult++){
-            printf("Printando resultado %u\n", idxResult);  
             if(strlen(msgParaCliente) > 0){
-                printf("Mensagem não estava vazia. Add espaço 2 !\n");
                 strcat(msgParaCliente," ");
             }
 
-            printf("%u\n", results[idxResult]);
-
             if(results[idxResult] == OK){
-                //printf("Foi OK\n");
                 addMensagemComDado(msgParaCliente, dados[idxResult], " added");
             }else if(results[idxResult] == ALREADY_EXISTS){
-               // printf("Foi ALREADYEXISTS\n");
                 addMensagemComDado(msgParaCliente, dados[idxResult], " already exists");
             }else if(results[idxResult] == MAX_LIMIT){
-               // printf("Foi LIMIT\n");
                 addMensagem(msgParaCliente, "limit exceeded");
             }else if(results[idxResult] == INVALID){
-                //printf("Foi INVALID\n");
                 addMensagem(msgParaCliente, "invalid message");
             }   
         }
@@ -249,7 +231,7 @@ bool conversa_client_server(struct Client *my_client, struct Pokedex* minhaPoked
             const char delimiter[] = " \t\r\n\v\f";
             char *token = strtok(buffer_msg, delimiter);
 
-            char* msgParaCliente[TAM_MAX_MSG];
+            char msgParaCliente[TAM_MAX_MSG];
             memset(msgParaCliente, 0, TAM_MAX_MSG);
 
             while (token != NULL){

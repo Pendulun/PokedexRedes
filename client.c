@@ -25,8 +25,6 @@ void usage(int argc, char **argv) {
 }
 
 void inicia_client(struct Client* client, int argc, char **argv){
-	//o sockaddr_storage é um sockaddr muito grande que, eventualmente, vira um in ou in6
-	struct sockaddr_storage storage;
 	//Faz o parse do que passado como argumento para ipv4 ou ipv6 se possível
 	if (0 != addrparse(argv[1], argv[2], &(client->cstorage))) {
 		usage(argc, argv);
@@ -81,7 +79,6 @@ bool recebe_mensagem_servidor(char* buf, unsigned int tamanho_buffer, struct Cli
 }
 
 bool conversa_com_servidor(char* buf, unsigned int tamanho_buffer, struct Client* cliente){
-	bool terminouConexao = false;
 	memset(buf, 0, tamanho_buffer);
 	
 	captura_mensagem_teclado(buf, tamanho_buffer);
