@@ -101,11 +101,6 @@ void send_msg_client(struct Client *my_client, char* buffer_msg, unsigned int ta
 	if (bytes_recebidos_pacote != strlen(buffer_msg)+1) {
 		logexit("send");
 	}
-
-    //Se não enviar o número certo de dados
-    if (bytes_recebidos_pacote != strlen(buffer_msg) + 1) {
-        logexit("send");
-    }
 }
 
 enum ops_server_enum getOpMensagem(const char* buf_msg){
