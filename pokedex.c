@@ -100,29 +100,24 @@ enum ops_pokedex_enum trocarPokemon(struct Pokedex *pokedex, const char *nome1, 
     }
 }
 
-char* listarPokemons(struct Pokedex *pokedex){
-    printf("1\n");
+char* listarPokemons(struct Pokedex *pokedex, char* nomesPokemons){
     if(pokedex->quantidadePokemons == 0){
         return "none";
     }
-    printf("2\n");
-
-    char* nomesPokemons;
     struct Node* noAtual = pokedex->head;
-    printf("3\n");
     while(noAtual != NULL){
         if(strlen(nomesPokemons)!=0){
             strcat(nomesPokemons, " ");
         }
-        strcat(nomesPokemons, noAtual->pokemon.nome);
+        const char* nomeAtual = noAtual->pokemon.nome;
+        strcat(nomesPokemons, nomeAtual);
         noAtual = noAtual->prox;
-        printf("4\n");
     }
-    printf("5\n");
     return nomesPokemons;
 }
 
 void limparPokedex(struct Pokedex *pokedex){
+    printf("Limpando pokedex!\n");
     if(pokedex->quantidadePokemons != 0){
         struct Node* noAtual = pokedex->head;
         while (noAtual != NULL) {

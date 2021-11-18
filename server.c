@@ -185,13 +185,15 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         }
 
     }else if(operacao == LIST){
-        char* nomesPokemons;
-        nomesPokemons = listarPokemons(minhaPokedex);
+        char nomesPokemons[TAM_MAX_MSG] = "";
+        listarPokemons(minhaPokedex, nomesPokemons);
+
         if(strlen(nomesPokemons)==0){
-            nomesPokemons = "none";
+            strcat(msgParaCliente,"none");
+        }else{
+            strcat(msgParaCliente,nomesPokemons);
         }
 
-        strcat(msgParaCliente,nomesPokemons);
         resultAcao = OK;
     }else if(operacao == EXCHANGE){
         char *dado1 = strtok(NULL, delimiter);

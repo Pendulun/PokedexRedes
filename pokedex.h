@@ -30,7 +30,7 @@ bool isInPokedex(struct Pokedex *pokedex, const char *nome);
 enum ops_pokedex_enum adicionarPokemon(struct Pokedex *pokedex, const char *nome);
 enum ops_pokedex_enum removerPokemon(struct Pokedex *pokedex, const char *nome);
 enum ops_pokedex_enum trocarPokemon(struct Pokedex *pokedex, const char *nome1, const char *nome2);
-char* listarPokemons(struct Pokedex *pokedex);
+char* listarPokemons(struct Pokedex *pokedex, char* nomesPokemons);
 void limparPokedex(struct Pokedex *pokedex);
 
 #endif //Pokedex
