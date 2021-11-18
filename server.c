@@ -108,7 +108,7 @@ void send_msg_client(struct Client *my_client, char* buffer_msg, unsigned int ta
     }
 }
 
-enum ops_server_enum getOpMensagem(char* buf_msg){
+enum ops_server_enum getOpMensagem(const char* buf_msg){
     if(strcmp(buf_msg,"kill\0")==0){
         return DIE;
     }else if(strcmp(buf_msg,"add\0")==0){
@@ -124,37 +124,13 @@ enum ops_server_enum getOpMensagem(char* buf_msg){
     }
 }
 
-void addMensagemAdded(char* msgParaCliente, char *dado){
-    strcat(msgParaCliente, dado);
-    strcat(msgParaCliente, " added");
+void addMensagemComDado(char* msgOriginal, const char* dado, const char* msgAdd){
+    strcat(msgOriginal, dado);
+    strcat(msgOriginal, msgAdd);
 }
 
-void addMensagemAlreadyExists(char* msgParaCliente, char *dado){
-    strcat(msgParaCliente, dado);
-    strcat(msgParaCliente, " already exists");
-}
-
-void addMensagemRemoved(char* msgParaCliente, char *dado){
-    strcat(msgParaCliente, dado);
-    strcat(msgParaCliente, " removed");
-}
-
-void addMensagemDoesntExists(char* msgParaCliente, char *dado){
-    strcat(msgParaCliente, dado);
-    strcat(msgParaCliente, " does not exist");
-}
-
-void addMensagemExchanged(char* msgParaCliente, char *dado){
-    strcat(msgParaCliente, dado);
-    strcat(msgParaCliente, " exchanged");
-}
-
-void addMensagemInvalid(char* msgParaCliente){
-    strcat(msgParaCliente,"invalid message");
-}
-
-void addMensagemLimit(char* msgParaCliente){
-    strcat(msgParaCliente, "limit exceeded");
+void addMensagem(char* msgOriginal, const char* msgAdd){
+    strcat(msgOriginal, msgAdd);
 }
 
 void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPokedex, char* msgParaCliente){
@@ -162,21 +138,61 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
     const char delimiter[]  = " \t\r\n\v\f";
 
     if(strlen(msgParaCliente) > 0){
-                strcat(msgParaCliente," ");
+        printf("Mensagem não estava vazia. Add espaço 1 !\n");
+        strcat(msgParaCliente," ");
     }
 
     if(operacao == ADD){
-        char *dado = strtok(NULL, delimiter);
-        enum ops_pokedex_enum result = adicionarPokemon(minhaPokedex, dado);
+        char* dados[NUM_MAX_POKEMON_ADDED];
+        unsigned int numPokemonsAdded = 0;
+        //Assumindo que sempre terá pelo menos um pokemon a ser add e que só existe uma operação a ser realizada por vez
+        char* token = strtok(NULL, delimiter);
+        while (token != NULL){
+            printf("Proximo token: %s\n", token);
+            printf("NumPokemonsAdded: %u\n", numPokemonsAdded);
+            printf("Entrou While\n");
+            if(numPokemonsAdded == NUM_MAX_POKEMON_ADDED){
+                printf("Leu muitos pokemons!\n");
+                //Ignora outros pokemons passados além do NUM_MAX_POKEMON_ADDED
+                break;
+            }else{    
+                dados[numPokemonsAdded] = token;
+                //strcpy(dados[numPokemonsAdded], token);
+                token = strtok(NULL, delimiter);
+                numPokemonsAdded++;
+            }
+        }
 
-        if(result == OK){
-            addMensagemAdded(msgParaCliente, dado);
-        }else if(result == ALREADY_EXISTS){
-            addMensagemAlreadyExists(msgParaCliente, dado);
-        }else if(result == MAX_LIMIT){
-            addMensagemLimit(msgParaCliente);
-        }else if(result == INVALID){
-            addMensagemInvalid(msgParaCliente);
+
+        for(unsigned int idx=0; idx< numPokemonsAdded; idx++){
+            printf("Pokemons passados: %s'\n", dados[idx]);
+        }
+        
+        enum ops_pokedex_enum results[numPokemonsAdded];
+        adicionarPokemons(minhaPokedex, dados, numPokemonsAdded, results);
+
+        for(unsigned int idxResult = 0; idxResult<numPokemonsAdded; idxResult++){
+            printf("Printando resultado %u\n", idxResult);  
+            if(strlen(msgParaCliente) > 0){
+                printf("Mensagem não estava vazia. Add espaço 2 !\n");
+                strcat(msgParaCliente," ");
+            }
+
+            printf("%u\n", results[idxResult]);
+
+            if(results[idxResult] == OK){
+                //printf("Foi OK\n");
+                addMensagemComDado(msgParaCliente, dados[idxResult], " added");
+            }else if(results[idxResult] == ALREADY_EXISTS){
+               // printf("Foi ALREADYEXISTS\n");
+                addMensagemComDado(msgParaCliente, dados[idxResult], " already exists");
+            }else if(results[idxResult] == MAX_LIMIT){
+               // printf("Foi LIMIT\n");
+                addMensagem(msgParaCliente, "limit exceeded");
+            }else if(results[idxResult] == INVALID){
+                //printf("Foi INVALID\n");
+                addMensagem(msgParaCliente, "invalid message");
+            }   
         }
     }else if(operacao == REMOVE){
         char *dado = strtok(NULL, delimiter);
@@ -184,11 +200,11 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         resultAcao = removerPokemon(minhaPokedex, dado);
 
         if(resultAcao == OK){
-            addMensagemRemoved(msgParaCliente, dado);
+            addMensagemComDado(msgParaCliente, dado, " removed");
         }else if(resultAcao == DOESNT_EXISTS){
-            addMensagemDoesntExists(msgParaCliente, dado);
+            addMensagemComDado(msgParaCliente, dado, " does not exist");
         }else if(resultAcao == INVALID){
-            addMensagemInvalid(msgParaCliente);
+            addMensagem(msgParaCliente, "invalid message");
         }
 
     }else if(operacao == LIST){
@@ -196,9 +212,9 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         listarPokemons(minhaPokedex, nomesPokemons);
 
         if(strlen(nomesPokemons)==0){
-            strcat(msgParaCliente,"none");
+            addMensagem(msgParaCliente, "none");
         }else{
-            strcat(msgParaCliente,nomesPokemons);
+            addMensagem(msgParaCliente, nomesPokemons);
         }
 
         resultAcao = OK;
@@ -208,13 +224,13 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         resultAcao = trocarPokemon(minhaPokedex, dado1, dado2);
 
         if(resultAcao == OK){
-            addMensagemExchanged(msgParaCliente, dado1);
+            addMensagemComDado(msgParaCliente, dado1, " exchanged");
         }else if(resultAcao == DOESNT_EXISTS){
-             addMensagemDoesntExists(msgParaCliente, dado1);
+             addMensagemComDado(msgParaCliente, dado1, " does not exist");
         }else if(resultAcao == ALREADY_EXISTS){
-            addMensagemAlreadyExists(msgParaCliente, dado2);
+            addMensagemComDado(msgParaCliente, dado2, " already exists");
         }else if(resultAcao == INVALID){
-            addMensagemInvalid(msgParaCliente);
+            addMensagem(msgParaCliente, "invalid message");
         }
     }
 }

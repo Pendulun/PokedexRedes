@@ -19,32 +19,39 @@ struct Node* searchInPokedex(struct Pokedex *pokedex, const char *nome){
 
 
 
-enum ops_pokedex_enum adicionarPokemon(struct Pokedex *pokedex, const char *nome){
-    if(pokedex->quantidadePokemons == pokedex->maxPokemons){
-        return MAX_LIMIT;
-    }
-
-    if(searchInPokedex(pokedex, nome)==NULL){
-        if(strlen(nome)>10){
-            return INVALID;
-        }
-        struct Node* novoPokemon = malloc(sizeof(struct Node));
-        strcpy(novoPokemon->pokemon.nome, nome);
-        novoPokemon->prox= NULL;
-        novoPokemon->before = NULL;
-
-        if(pokedex->head == NULL){
-            pokedex->head = novoPokemon;
-            pokedex->tail = novoPokemon;
+void adicionarPokemons(struct Pokedex *pokedex, const char* nomes[], const unsigned int numNomes, enum ops_pokedex_enum *results){
+    for(unsigned int idxPokemonAdd=0; idxPokemonAdd<numNomes; idxPokemonAdd++){
+        //Se atingiu o limite
+        if(pokedex->quantidadePokemons == pokedex->maxPokemons){
+            results[idxPokemonAdd] = MAX_LIMIT;
         }else{
-            novoPokemon->before = pokedex->tail;
-            pokedex->tail->prox = novoPokemon;
-            pokedex->tail = novoPokemon;
+            //Se já não existe na pokedex
+            if(searchInPokedex(pokedex, nomes[idxPokemonAdd])==NULL){
+                //Se o nome passa do limite
+                printf("Nome do pokemon a ser add: %s\n", nomes[idxPokemonAdd]);
+                if(strlen(nomes[idxPokemonAdd])>TAM_MAX_NOME_POKEMON){
+                    results[idxPokemonAdd] = INVALID;
+                }else{
+                    struct Node* novoPokemon = malloc(sizeof(struct Node));
+                    strcpy(novoPokemon->pokemon.nome, nomes[idxPokemonAdd]);
+                    novoPokemon->prox = NULL;
+                    novoPokemon->before = NULL;
+
+                    if(pokedex->head == NULL){
+                        pokedex->head = novoPokemon;
+                        pokedex->tail = novoPokemon;
+                    }else{
+                        novoPokemon->before = pokedex->tail;
+                        pokedex->tail->prox = novoPokemon;
+                        pokedex->tail = novoPokemon;
+                    }
+                    pokedex->quantidadePokemons += 1;
+                    results[idxPokemonAdd] = OK;
+                }
+            }else{
+                results[idxPokemonAdd] = ALREADY_EXISTS;
+            }
         }
-        pokedex->quantidadePokemons += 1;
-        return OK;
-    }else{
-        return ALREADY_EXISTS;
     }
 }
 
