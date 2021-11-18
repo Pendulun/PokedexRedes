@@ -34,7 +34,6 @@ enum ops_pokedex_enum adicionarPokemon(struct Pokedex *pokedex, const char *nome
         novoPokemon->before = NULL;
 
         if(pokedex->head == NULL){
-            printf("Adicionou no HEAD\n");
             pokedex->head = novoPokemon;
             pokedex->tail = novoPokemon;
         }else{
@@ -50,31 +49,24 @@ enum ops_pokedex_enum adicionarPokemon(struct Pokedex *pokedex, const char *nome
 }
 
 enum ops_pokedex_enum removerPokemon(struct Pokedex *pokedex, const char *nome){
-    printf("1\n");
     if(pokedex->quantidadePokemons == 0){
         return DOESNT_EXISTS;
     }
-    printf("2\n");
     struct Node* noPokemon = searchInPokedex(pokedex, nome);
     if(noPokemon == NULL){
         return DOESNT_EXISTS;
-        printf("3\n");
     }else{
-        printf("4\n");
         if(noPokemon->before != NULL){
             noPokemon->before->prox = noPokemon->prox;
         }else{
             pokedex->head = noPokemon->prox;
         }
-        printf("5\n");
         
         if(noPokemon->prox == NULL){
             pokedex->tail = noPokemon->before;
         }
-        printf("6\n");
         noPokemon->prox = NULL;
         noPokemon->before = NULL;
-        printf("7\n");
         free(noPokemon);
         pokedex->quantidadePokemons -= 1;
         return OK;
@@ -86,8 +78,13 @@ enum ops_pokedex_enum trocarPokemon(struct Pokedex *pokedex, const char *nome1, 
         return DOESNT_EXISTS;
     }
 
+
     struct Node* noPokemon1 = searchInPokedex(pokedex, nome1);
     if(noPokemon1 != NULL){
+        if(strlen(nome2) > 10){
+            return INVALID;
+        }
+
         struct Node* noPokemon2 = searchInPokedex(pokedex, nome2);
         if(noPokemon2 == NULL){
             strcpy(noPokemon1->pokemon.nome, nome2);
@@ -117,7 +114,6 @@ char* listarPokemons(struct Pokedex *pokedex, char* nomesPokemons){
 }
 
 void limparPokedex(struct Pokedex *pokedex){
-    printf("Limpando pokedex!\n");
     if(pokedex->quantidadePokemons != 0){
         struct Node* noAtual = pokedex->head;
         while (noAtual != NULL) {

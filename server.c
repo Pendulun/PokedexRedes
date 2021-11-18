@@ -149,6 +149,14 @@ void addMensagemExchanged(char* msgParaCliente, char *dado){
     strcat(msgParaCliente, " exchanged");
 }
 
+void addMensagemInvalid(char* msgParaCliente){
+    strcat(msgParaCliente,"invalid message");
+}
+
+void addMensagemLimit(char* msgParaCliente){
+    strcat(msgParaCliente, "limit exceeded");
+}
+
 void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPokedex, char* msgParaCliente){
     enum ops_pokedex_enum resultAcao;
     const char delimiter[]  = " \t\r\n\v\f";
@@ -166,14 +174,13 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         }else if(result == ALREADY_EXISTS){
             addMensagemAlreadyExists(msgParaCliente, dado);
         }else if(result == MAX_LIMIT){
-            strcat(msgParaCliente, "limit exceeded");
+            addMensagemLimit(msgParaCliente);
         }else if(result == INVALID){
-            strcat(msgParaCliente,"invalid message");
+            addMensagemInvalid(msgParaCliente);
         }
     }else if(operacao == REMOVE){
         char *dado = strtok(NULL, delimiter);
 
-        printf("Nome pokemon a remover %s\n", dado);
         resultAcao = removerPokemon(minhaPokedex, dado);
 
         if(resultAcao == OK){
@@ -181,7 +188,7 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         }else if(resultAcao == DOESNT_EXISTS){
             addMensagemDoesntExists(msgParaCliente, dado);
         }else if(resultAcao == INVALID){
-            strcat(msgParaCliente,"invalid message");
+            addMensagemInvalid(msgParaCliente);
         }
 
     }else if(operacao == LIST){
@@ -207,7 +214,7 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         }else if(resultAcao == ALREADY_EXISTS){
             addMensagemAlreadyExists(msgParaCliente, dado2);
         }else if(resultAcao == INVALID){
-            strcat(msgParaCliente,"invalid message");
+            addMensagemInvalid(msgParaCliente);
         }
     }
 }
@@ -242,7 +249,6 @@ bool conversa_client_server(struct Client *my_client, struct Pokedex* minhaPoked
                     break;
                 }else{
                     realizarOpPokedex(operacao, minhaPokedex, msgParaCliente); 
-                    printf("Tamanho pokedex: %d\n", minhaPokedex->quantidadePokemons);
                     break;              
                 }
 
