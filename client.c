@@ -47,12 +47,10 @@ void inicia_client(struct Client* client, int argc, char **argv){
 
 	addrtostr(client->caddr, client->caddrstr, BUFSZ);
 
-	printf("connected to %s\n", client->caddrstr);
 
 }
 
 void captura_mensagem_teclado(char* buf, unsigned int tamanho_buffer){
-	printf("> ");
 	//Lê, do teclado, uma mensagem. Já adiciona o \n no final
 	setbuf(stdin, NULL);
 	fgets(buf, tamanho_buffer-1, stdin);
@@ -72,7 +70,6 @@ bool recebe_mensagem_servidor(char* buf, unsigned int tamanho_buffer, struct Cli
 
 	bool deuErro = le_msg_socket(&cliente->socket, buf);
 	
-	printf("< ");
 	fputs(buf,stdout);
 	
 	return deuErro;

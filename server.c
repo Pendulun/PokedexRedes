@@ -63,7 +63,7 @@ void iniciar_servidor(struct Server *my_server, int argc, char **argv){
 
     //Mensagem para indicar que estamos esperando
     addrtostr(my_server->addr, my_server->addrstr, BUFSZ);
-    printf("bound to %s, waiting connections\n", my_server->addrstr);
+    //printf("bound to %s, waiting connections\n", my_server->addrstr);
 
     return;
 }
@@ -80,14 +80,11 @@ void iniciar_client(struct Client *my_client, struct Server *my_server){
     }
 
     //Printa mensagem de conexão
-    addrtostr(my_client->caddr, my_client->caddrstr, BUFSZ);
-    printf("[log] connection from %s\n", my_client->caddrstr);
+    addrtostr(my_client->caddr, my_client->caddrstr, BUFSZ);;
 }
 
 bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
     bool deuErro = le_msg_socket(&my_client->socket, buffer_msg);
-    //printf(deuErro);
-    printf("< ");
     fputs(buffer_msg, stdout);
     return deuErro;
 }
@@ -95,10 +92,10 @@ bool get_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tam
 void send_msg_client(struct Client *my_client, char* buffer_msg, unsigned int tamanho_buffer){
     //Envia uma resposta
     size_t bytes_recebidos_pacote;
-    bytes_recebidos_pacote = send(my_client->socket, buffer_msg, strlen(buffer_msg) + 1, 0);
+    bytes_recebidos_pacote = send(my_client->socket, buffer_msg, strlen(buffer_msg), 0);
 
     //Se enviou um número de bytes diferente do próprio tamanho da mensagem, deu erro
-	if (bytes_recebidos_pacote != strlen(buffer_msg)+1) {
+	if (bytes_recebidos_pacote != strlen(buffer_msg)) {
 		logexit("send");
 	}
 }
@@ -141,16 +138,16 @@ void realizarOpPokedex(enum ops_server_enum operacao, struct Pokedex* minhaPoked
         unsigned int numPokemonsAdded = 0;
         //Assumindo que sempre terá pelo menos um pokemon a ser add e que só existe uma operação a ser realizada por vez
         char* token = strtok(NULL, delimiter);
+
         while (token != NULL){
             if(numPokemonsAdded == NUM_MAX_POKEMON_ADDED){
                 //Ignora outros pokemons passados além do NUM_MAX_POKEMON_ADDED
                 break;
-            }else{    
-                dados[numPokemonsAdded] = token;
-                //strcpy(dados[numPokemonsAdded], token);
-                token = strtok(NULL, delimiter);
-                numPokemonsAdded++;
-            }
+            }  
+            
+            dados[numPokemonsAdded] = token;
+            token = strtok(NULL, delimiter);
+            numPokemonsAdded++;
         }
         
         enum ops_pokedex_enum results[numPokemonsAdded];
@@ -275,7 +272,6 @@ int main(int argc, char **argv) {
 
     bool matar_server = false;
     while (!matar_server) {
-        printf("Esperando conexao\n");
 
         struct Client my_client;
         iniciar_client(&my_client, &my_server);

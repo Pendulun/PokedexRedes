@@ -27,6 +27,9 @@ struct Pokedex{
 
 enum ops_pokedex_enum{OK, MAX_LIMIT, ALREADY_EXISTS, DOESNT_EXISTS, INVALID};
 
+bool estaNaPokedex(const struct Pokedex *pokedex, const char* nome);
+bool caracterEspecial(const char *c);
+bool nomeInvalido(const char* nome);
 struct Node* searchInPokedex(struct Pokedex *pokedex, const char *nome);
 void adicionarPokemons(struct Pokedex *pokedex, const char* nomes[], const unsigned int numNomes, enum ops_pokedex_enum *results);
 enum ops_pokedex_enum removerPokemon(struct Pokedex *pokedex, const char *nome);
