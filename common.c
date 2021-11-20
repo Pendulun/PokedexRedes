@@ -130,7 +130,7 @@ bool le_msg_socket(int *socket, char *buffer_msg){
     size_t bytes_recebidos_pacote;
 
     while(!fim_msg_detectado){
-        bytes_recebidos_pacote = recv(*socket, buffer_msg + total_bytes_recebido, TAM_MAX_MSG - 1, 0);
+        bytes_recebidos_pacote = recv(*socket, buffer_msg + total_bytes_recebido, TAM_MAX_MSG - total_bytes_recebido, 0);
         if(bytes_recebidos_pacote <= 0){
             return true;
         }else{
